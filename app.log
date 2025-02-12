@@ -1,0 +1,30 @@
+2025-02-12 15:49:17,307 - ERROR - Reporter could not be created
+2025-02-12 15:50:30,846 - ERROR - Reporter could not be created
+2025-02-12 15:51:39,976 - ERROR - 1265 (01000): Data truncated for column 'reporter_sex' at row 1
+2025-02-12 15:51:39,976 - ERROR - Reporter could not be created
+2025-02-12 15:52:21,136 - INFO - Reporter created successfully
+2025-02-12 15:52:21,150 - ERROR - Case could not be created
+2025-02-12 16:02:57,610 - INFO - Reporter created successfully
+2025-02-12 16:02:57,611 - ERROR - Case could not be created
+2025-02-12 16:11:31,440 - INFO - Reporter created successfully
+2025-02-12 16:11:31,498 - ERROR - Case could not be created
+2025-02-12 16:11:46,522 - INFO - Reporter created successfully
+2025-02-12 16:11:46,523 - ERROR - Case could not be created
+2025-02-12 16:13:29,679 - INFO - Reporter created successfully
+2025-02-12 16:13:29,680 - ERROR - Case could not be created
+2025-02-12 16:13:29,680 - ERROR - 1292 (22007): Incorrect datetime value: '2025-02-12T20:13:29.661Z' for column 'register_date' at row 1
+2025-02-12 16:25:50,565 - INFO - Reporter created successfully
+2025-02-12 16:25:50,566 - ERROR - Case could not be created
+2025-02-12 16:25:50,566 - ERROR - 1292 (22007): Incorrect datetime value: '2025-02-12T20:25:50.221Z' for column 'register_date' at row 1
+2025-02-12 16:33:22,316 - INFO - Reporter created successfully with id: 17
+2025-02-12 16:33:22,327 - ERROR - Case could not be created
+2025-02-12 16:33:22,327 - ERROR - 1292 (22007): Incorrect datetime value: '2025-02-12T20:33:21.884Z' for column 'register_date' at row 1
+2025-02-12 16:41:28,548 - INFO - Reporter created successfully with id: 18
+2025-02-12 16:41:28,557 - ERROR - Case could not be created
+2025-02-12 16:41:28,557 - ERROR - 1265 (01000): Data truncated for column 'status' at row 1
+2025-02-12 16:43:08,045 - INFO - Reporter created successfully with id: 19
+2025-02-12 16:43:08,057 - ERROR - En proceso
+2025-02-12 16:43:08,057 - ERROR - Case could not be created
+2025-02-12 16:43:08,057 - ERROR - 1265 (01000): Data truncated for column 'status' at row 1
+2025-02-12 16:45:02,059 - INFO - Reporter created successfully with id: 20
+2025-02-12 16:45:02,151 - INFO - Case created successfully

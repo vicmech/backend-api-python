@@ -1,22 +1,25 @@
+import logging
 import mysql.connector
 from mysql.connector import Error as E
 
-print('Attempting connection to database...')
+logging.basicConfig(filename='connection.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-try:
-    con = mysql.connector.MySQLConnection(
-        host ="localhost",
-        port = 3306,
-        user="root",
-        password="root",
-        database="ong_database"
-    )
-    if con.is_connected():
-        print('Connected to database successfully')
-    else:
-        print('Connection to database failed')
-except E:
-    print(E) 
+def getConnection():
+    try:
+        con = mysql.connector.MySQLConnection(
+            host ="localhost",
+            port = 3306,
+            user="root",
+            password="root",
+            database="ong_database"
+        )
+        if con.is_connected():
+            print('Connection established')
+        return con
+    except E:
+        logging.error('Connection failed: ' + E)
 
-cursor = con.cursor()
-
+def closeConnection(con):
+    con.close()
+    print('Connection closed')
+    logging.info('Connection closed')
