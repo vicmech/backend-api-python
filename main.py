@@ -57,6 +57,10 @@ class CombinedCreate(BaseModel):
     description: str
     status: str
 
+class QueryReports(BaseModel):
+    report_id : Optional[int]
+    reporter_id : Optional[int]
+
 # REPORTS routes
 @app.get("/api/reports/{report_id}") #Individual Report
 async def read_item(report_id: int):
@@ -73,20 +77,47 @@ async def read_item(report_id: int):
         closeConnection(Con)
 
 @app.get("/api/reports/") #Reports by status and/or priority
-async def read_item(status: str = None, priority: str = None):
+async def read_item(
+    report_id: Optional[int] = None,
+    reporter_id: Optional[int] = None,
+    manager_id: Optional[int] = None,
+    register_date: Optional[str] = None,
+    atention_date: Optional[str] = None,
+    close_date: Optional[str] = None,
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+):
     try:
         Con = getConnection()
         cursor = Con.cursor()
 
         query = "SELECT * FROM reports WHERE 1=1"
         params = []
-        if status:
+        if report_id is not None:
+            query += " AND report_id = %s"
+            params.append(report_id)
+        if reporter_id is not None:
+            query += " AND reporter_id = %s"
+            params.append(reporter_id)
+        if manager_id is not None:
+            query += " AND manager_id = %s"
+            params.append(manager_id)
+        if register_date is not None:
+            query += " AND DATE(register_date) = %s"
+            params.append(register_date)
+        if atention_date is not None:
+            query += " AND DATE(atention_date) = %s"
+            params.append(atention_date)
+        if close_date is not None:
+            query += " AND DATE(close_date) = %s"
+            params.append(close_date)
+        if status is not None:
             query += " AND LOWER(status)=LOWER(%s)"
             params.append(status)
-        if priority:
+        if priority is not None:
             query += " AND LOWER(priority)=LOWER(%s)"
             params.append(priority)
-        
+
         cursor.execute(query, params)
         items = cursor.fetchall()
         return items
