@@ -23,100 +23,65 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class CaseCreate(BaseModel):
-    reporter_id: int
-    manager_id: int
-    register_date: str
-    atention_date: Optional[str]
-    close_date: Optional[str]
-    priority: str
-    description: str
-    status: str
-
-class ReporterCreate(BaseModel):
-    reporter_id: Optional[int]
-    reporter_first_name: str
-    reporter_last_name: str
-    reporter_sex : str
-    reporter_age : int
-
 class CaseManagerCreate(BaseModel):
-    manager_id: int
-    manager_first_name: str
-    manager_last_name: str
-    manager_sex : str
+    supporter_id: str
+    supporter_name: str
+    supporter_lastname: str
+    supporter_department : str
 
 class CombinedCreate(BaseModel):
-    reporter_first_name: str
-    reporter_last_name: str
-    reporter_age: int
-    reporter_sex: str
-    manager_id: int
-    register_date: str
-    priority: str
-    description: str
-    status: str
+    isNewClient: bool
+    client_id:str
+    client_name: str
+    client_lastname: str
+    client_age: str
+    client_document: str
+    client_sex: str
+    client_city: str
+    ticket_id : str
+    ticket_supporter: str
+    ticket_generation_date: str
+    ticket_category: str
+    ticket_description: str
 
-class QueryReports(BaseModel):
-    report_id : Optional[int]
-    reporter_id : Optional[int]
-
-# REPORTS routes
-@app.get("/api/reports/{report_id}") #Individual Report
-async def read_item(report_id: int):
-    try:
-        Con = getConnection()
-        cursor = Con.cursor()
-        cursor.execute(f'SELECT * FROM reports WHERE report_id={report_id}')
-        item = cursor.fetchone()
-        return item
-    except Error as e:
-        logging.error(e)
-        print(e)
-    finally:
-        closeConnection(Con)
-
-@app.get("/api/reports/") #Reports by status and/or priority
+# Tickets routes
+@app.get("/api/tickets/") #Reports by status and/or priority
 async def read_item(
-    report_id: Optional[int] = None,
-    reporter_id: Optional[int] = None,
-    manager_id: Optional[int] = None,
-    register_date: Optional[str] = None,
-    atention_date: Optional[str] = None,
-    close_date: Optional[str] = None,
-    status: Optional[str] = None,
-    priority: Optional[str] = None,
+    ticket_id: Optional[str] = None,
+    client_id: Optional[str] = None,
+    supporter_id: Optional[str] = None,
+    ticket_register_date: Optional[str] = None,
+    ticket_close_date: Optional[str] = None,
+    ticket_status: Optional[str] = None,
+    ticket_category: Optional[str] = None,
 ):
     try:
         Con = getConnection()
         cursor = Con.cursor()
 
-        query = "SELECT * FROM reports WHERE 1=1"
+        query = "SELECT * FROM tickets WHERE 1=1"
         params = []
-        if report_id is not None:
-            query += " AND report_id = %s"
-            params.append(report_id)
-        if reporter_id is not None:
-            query += " AND reporter_id = %s"
-            params.append(reporter_id)
-        if manager_id is not None:
-            query += " AND manager_id = %s"
-            params.append(manager_id)
-        if register_date is not None:
-            query += " AND DATE(register_date) = %s"
-            params.append(register_date)
-        if atention_date is not None:
-            query += " AND DATE(atention_date) = %s"
-            params.append(atention_date)
-        if close_date is not None:
-            query += " AND DATE(close_date) = %s"
-            params.append(close_date)
-        if status is not None:
-            query += " AND LOWER(status)=LOWER(%s)"
-            params.append(status)
-        if priority is not None:
-            query += " AND LOWER(priority)=LOWER(%s)"
-            params.append(priority)
+        if ticket_id is not None:
+            query += " AND ticket_id = %s"
+            params.append(ticket_id)
+        if client_id is not None:
+            query += " AND ticket_client_id = %s"
+            params.append(client_id)
+        if supporter_id is not None:
+            query += " AND ticket_supporter = %s"
+            params.append(supporter_id)
+        if ticket_register_date is not None:
+            query += " AND DATE(ticket_register_date) = %s"
+            params.append(ticket_register_date)
+        if ticket_close_date is not None:
+            query += " AND DATE(ticket_close_date) = %s"
+            params.append(ticket_close_date)
+        if ticket_status is not None:
+            query += " AND LOWER(ticket_status)=LOWER(%s)"
+            params.append(ticket_status)
+        if ticket_category is not None:
+            query += " AND LOWER(ticket_category)=LOWER(%s)"
+            params.append(ticket_category)
 
         cursor.execute(query, params)
         items = cursor.fetchall()
@@ -181,21 +146,21 @@ async def getReportByDate(year : Optional[int] = None, month : Optional[int] = N
 
 
 # REPORTERS routes
-@app.get("/api/reporters/") #Get all reporters or by id, name or lastname
-async def read_item(id : int = None, name : str = None, lastname : str = None):
+@app.get("/api/clients/") #Get all reporters or by id, name or lastname
+async def read_item(client_id : str = None, name : str = None, lastname : str = None):
     try:
         Con = getConnection()
         cursor = Con.cursor()
-        query = "SELECT * FROM reporters WHERE 1=1"
+        query = "SELECT * FROM clients WHERE 1=1"
         params = []
-        if id:
-            query += " AND reporter_id=%s"
-            params.append(id)
-        if name:
-            query += " AND LOWER(reporter_first_name)=LOWER(%s)"
+        if client_id is not None:
+            query += " AND client_id=%s"
+            params.append(client_id)
+        if name is not None:
+            query += " AND LOWER(client_name)=LOWER(%s)"
             params.append(name)
-        if lastname:
-            query += " AND LOWER(reporter_last_name)=LOWER(%s)"
+        if lastname is not None:
+            query += " AND LOWER(client_lastname)=LOWER(%s)"
             params.append(lastname)
 
         cursor.execute(query, params)
@@ -207,67 +172,128 @@ async def read_item(id : int = None, name : str = None, lastname : str = None):
         closeConnection(Con)
 
 # CASEMANAGERS routes
-@app.get("/api/casemanagers/") #Get all casemanagers or by id, name or lastname
-async def read_item(id : int = None, name : str = None, lastname : str = None):
+@app.get("/api/supporters/") #Get all casemanagers or by id, name or lastname
+async def read_item(id : str = None, name : str = None, lastname : str = None, department : str = None):
     try:
         Con = getConnection()
         cursor = Con.cursor()
-        query = "SELECT * FROM casemanager WHERE 1=1"
+        query = "SELECT * FROM supporters WHERE 1=1"
         params = []
         if id:
-            query += " AND manager_id=%s"
+            query += " AND supporter_id=%s"
             params.append(id)
         if name:
-            query += " AND LOWER(manager_first_name)=LOWER(%s)"
+            query += " AND LOWER(supporter_name)=LOWER(%s)"
             params.append(name)
         if lastname:
-            query += " AND LOWER(manager_last_name)=LOWER(%s)"
+            query += " AND LOWER(supporter_lastname)=LOWER(%s)"
             params.append(lastname)
+        if department:
+            query += " AND lower(supporter_department)=LOWER(%s)"
+            params.append(department)
     
+        cursor.execute(query, params)
+        items = cursor.fetchall()
+        return items
+    except Error as e:
+        return []
+        logging.error(e)
+    finally:
+        closeConnection(Con)
+
+# DEPARTMENTS routes
+@app.get("/api/departments/")
+async def get_departments(department_id : Optional[str] = None):
+    try:
+        print(department_id)
+        con = getConnection()
+        cursor = con.cursor()
+        query = 'SELECT * FROM departments WHERE 1=1'
+        params = []
+
+        if(department_id is not None):
+            query += ' AND department_id = %s'
+            params.append(department_id)
+
         cursor.execute(query, params)
         items = cursor.fetchall()
         return items
     except Error as e:
         logging.error(e)
     finally:
-        closeConnection(Con)
+        closeConnection(con)
 
 #POST method to create a new report
-@app.post("/api/report/create/")
-async def create_case(case: CombinedCreate, response : Response):
-    try:
-        con = getConnection()
-        cursor = con.cursor()
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        query = """INSERT INTO reporters (reporter_first_name, reporter_last_name, reporter_sex, reporter_age) VALUES (%s, %s, %s, %s)"""
-        values = (case.reporter_first_name, case.reporter_last_name, case.reporter_sex, case.reporter_age)
-   
-        cursor.execute(query, values)
-        con.commit()
-        logging.info("Reporter created successfully with id: " + str(cursor.lastrowid))
-        reporter_id = cursor.lastrowid
-    except Error as e:
-        logging.error(e)
-        logging.error("Reporter could not be created")
-        print(e)
-        return "No se pudo crear el reportero"
-    finally:
-        closeConnection(con)
+@app.post("/api/tickets/create/")
+async def create_case(ticket: CombinedCreate, response : Response):
+
+    client_id = ticket.client_id or '' 
+    client_name = ticket.client_name or None
+    client_lastname = ticket.client_lastname or None  
+    client_age = ticket.client_age or None
+    client_document = ticket.client_document
+    client_sex = ticket.client_sex or None
+    client_city = ticket.client_city or None
+    ticket_id = ticket.ticket_id
+    ticket_supporter = ticket.ticket_supporter
+    ticket_generation_date = ticket.ticket_generation_date
+    ticket_category = ticket.ticket_category
+    ticket_description = ticket.ticket_description or None
+
+    print(client_id)
+    if(ticket.isNew == 'true'):
+        try:
+            con = getConnection()
+            cursor = con.cursor()
+            response.headers["Access-Control-Allow-Origin"] = "*"
+            query = """INSERT INTO clients (client_id, client_name, client_lastname, client_document, client_sex, client_age, client_city) VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+            values = (
+                client_id,
+                client_name,
+                client_lastname,
+                client_document,
+                client_document,
+                client_sex,
+                client_age,
+                client_city)
+        
+            cursor.execute(query, values)
+            con.commit()
+            logging.info("Client created successfully with id: " + client_id)
+        except Error as e:
+            logging.error(e)
+            logging.error("Reporter could not be created")
+            print(e)
+            return "No se pudo crear el reportero"
+        finally:
+            closeConnection(con)
+    else:
+        try:
+            con = getConnection()
+            cursor = con.cursor()
+            query = 'SELECT * FROM clients WHERE client_document = %s'
+            cursor.execute(query, [ticket.client_document])
+            ticket.client_id = cursor.fetchone()
+        except Error as e:
+            logging.error(e)
+        finally:
+            closeConnection(con)
 
     try:
         con = getConnection()
         cursor = con.cursor()
         query = """
-        INSERT INTO reports (reporter_id, manager_id, register_date, priority, description, status)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        INSERT INTO tickets (ticket_id, ticker_category, ticket_supporter, tickey_status, ticket_description, ticket_generation_date, ticket_client_id) 
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
         values = [
-            reporter_id,
-            case.manager_id,
-            case.register_date,
-            case.priority,
-            case.description,
-            case.status
+            ticket_id,
+            ticket_category,
+            ticket_supporter,
+            'Abierto',
+            ticket_description,
+            ticket_generation_date,
+            client_id
         ]
         cursor.execute(query, values)
         con.commit()
@@ -278,3 +304,24 @@ async def create_case(case: CombinedCreate, response : Response):
         print(e)
     finally:
         closeConnection(con)
+
+@app.post('/api/supporters/create')
+async def create_manager(supporter : CaseManagerCreate):
+    try:
+        con = getConnection()
+        cursor = con.cursor()
+        query = """INSERT INTO supporters (supporter_id, supporter_name, supporter_lastname, supporter_department) VALUES (%s, %s, %s, %s)"""
+        values = (supporter.supporter_id,
+                  supporter.supporter_name,
+                  supporter.supporter_lastname,
+                  supporter.supporter_department)
+   
+        cursor.execute(query, values)
+        con.commit()
+        logging.info("Supporter created successfully")
+    except Error as e:
+        logging.error('Supporter could not be created')
+        logging.error(e)
+    finally:
+        closeConnection(con)
+

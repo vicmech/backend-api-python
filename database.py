@@ -11,7 +11,7 @@ def getConnection():
             port = 3306,
             user="root",
             password="root",
-            database="ong_database"
+            database="delivery-cases-db"
         )
         if con.is_connected():
             print('Connection established')
