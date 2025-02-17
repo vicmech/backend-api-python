@@ -31,18 +31,18 @@ class CaseManagerCreate(BaseModel):
 
 class CombinedCreate(BaseModel):
     isNewClient: bool
-    client_id:str
-    client_name: str
-    client_lastname: str
-    client_age: str
+    client_id: Optional[str]
+    client_name: Optional[str]
+    client_lastname: Optional[str]
+    client_age: Optional[str]
     client_document: str
-    client_sex: str
-    client_city: str
+    client_sex: Optional[str]
+    client_city: Optional[str]
     ticket_id : str
     ticket_supporter: str
     ticket_generation_date: str
     ticket_category: str
-    ticket_description: str
+    ticket_description: Optional[str]
 
 # Tickets routes
 @app.get("/api/tickets/") #Reports by status and/or priority
@@ -147,7 +147,7 @@ async def getReportByDate(year : Optional[int] = None, month : Optional[int] = N
 
 # REPORTERS routes
 @app.get("/api/clients/") #Get all reporters or by id, name or lastname
-async def read_item(client_id : str = None, name : str = None, lastname : str = None):
+async def read_item(client_id : str = None, name : str = None, lastname : str = None, document : str = None):
     try:
         Con = getConnection()
         cursor = Con.cursor()
@@ -162,6 +162,9 @@ async def read_item(client_id : str = None, name : str = None, lastname : str = 
         if lastname is not None:
             query += " AND LOWER(client_lastname)=LOWER(%s)"
             params.append(lastname)
+        if document is not None:
+            query += " AND LOWER(client_document)=%s"
+            params.append(document)
 
         cursor.execute(query, params)
         items = cursor.fetchall()
@@ -223,11 +226,37 @@ async def get_departments(department_id : Optional[str] = None):
     finally:
         closeConnection(con)
 
+@app.get("/api/getGraph2/")
+async def get_data():
+    try:
+        con = getConnection()
+        cursor = con.cursor()
+        cursor.execute("SELECT t.ticket_category AS Categoria, SUM(CASE WHEN c.client_sex = 'Masculino' THEN 1 ELSE 0 END) AS Casos_Masculinos, SUM(CASE WHEN c.client_sex = 'Femenino' THEN 1 ELSE 0 END) AS Casos_Femeninos FROM `delivery-cases-db`.tickets t INNER JOIN `delivery-cases-db`.clients c ON t.ticket_client_id = c.client_id GROUP BY t.ticket_category")
+        items = cursor.fetchall()
+        return items
+    except Error as e:
+        logging.error(e)
+    finally:
+        closeConnection(con)
+
+@app.get("/api/getGraph3/")
+async def get_data():
+    try:
+        con = getConnection()
+        cursor = con.cursor()
+        cursor.execute("SELECT `delivery-cases-db`.c.client_sex AS Sexo, SUM(CASE WHEN t.ticket_generation_date >= DATE_SUB(CURDATE(), INTERVAL 4 WEEK) THEN 1 ELSE 0 END) AS Semana_4, SUM(CASE WHEN t.ticket_generation_date >= DATE_SUB(CURDATE(), INTERVAL 3 WEEK) AND t.ticket_generation_date < DATE_SUB(CURDATE(), INTERVAL 2 WEEK) THEN 1 ELSE 0 END) AS Semana_3, SUM(CASE WHEN t.ticket_generation_date >= DATE_SUB(CURDATE(), INTERVAL 2 WEEK) AND t.ticket_generation_date < DATE_SUB(CURDATE(), INTERVAL 1 WEEK) THEN 1 ELSE 0 END) AS Semana_2, SUM(CASE WHEN t.ticket_generation_date >= DATE_SUB(CURDATE(), INTERVAL 1 WEEK) THEN 1 ELSE 0 END) AS Semana_1 FROM `delivery-cases-db`.tickets t INNER JOIN `delivery-cases-db`.clients c ON t.ticket_client_id = c.client_id GROUP BY c.client_sex;")
+        items = cursor.fetchall()
+        return items
+    except Error as e:
+        logging.error(e)
+    finally:
+        closeConnection(con)
+
 #POST method to create a new report
 @app.post("/api/tickets/create/")
 async def create_case(ticket: CombinedCreate, response : Response):
 
-    client_id = ticket.client_id or '' 
+    client_id = ticket.client_id or None
     client_name = ticket.client_name or None
     client_lastname = ticket.client_lastname or None  
     client_age = ticket.client_age or None
@@ -241,7 +270,7 @@ async def create_case(ticket: CombinedCreate, response : Response):
     ticket_description = ticket.ticket_description or None
 
     print(client_id)
-    if(ticket.isNew == 'true'):
+    if(ticket.isNewClient):
         try:
             con = getConnection()
             cursor = con.cursor()
@@ -251,7 +280,6 @@ async def create_case(ticket: CombinedCreate, response : Response):
                 client_id,
                 client_name,
                 client_lastname,
-                client_document,
                 client_document,
                 client_sex,
                 client_age,
@@ -281,9 +309,10 @@ async def create_case(ticket: CombinedCreate, response : Response):
 
     try:
         con = getConnection()
+        print('connected')
         cursor = con.cursor()
         query = """
-        INSERT INTO tickets (ticket_id, ticker_category, ticket_supporter, tickey_status, ticket_description, ticket_generation_date, ticket_client_id) 
+        INSERT INTO tickets (ticket_id, ticket_category, ticket_supporter, ticket_status, ticket_description, ticket_generation_date, ticket_client_id) 
         VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
         values = [
